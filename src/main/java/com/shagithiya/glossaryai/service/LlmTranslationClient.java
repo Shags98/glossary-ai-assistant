@@ -2,7 +2,8 @@ package com.shagithiya.glossaryai.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,26 +14,12 @@ import org.springframework.web.client.RestTemplate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Client for calling Groq's OpenAI-compatible chat completion API.
- *
- * This is the core piece Power Apps could not do cleanly:
- *   - a single structured prompt requesting translations for 14 languages at once
- *   - strict JSON-only response parsing
- *   - retry-friendly, testable, version-controlled prompt logic
- *
- * Power Apps' AI Builder / Power Automate HTTP connectors only support simple
- * request-response calls with no native JSON schema validation or multi-step
- * orchestration, which made this kind of batch structured generation impractical
- * inside the EDD Glossary Manager.
- */
-@Slf4j
 @Service
 public class LlmTranslationClient {
 
+    private static final Logger log = LoggerFactory.getLogger(LlmTranslationClient.class);
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-    // The 14 languages supported by the EDD Glossary Manager
     private static final Map<String, String> SUPPORTED_LANGUAGES = new LinkedHashMap<>() {{
         put("es", "Spanish");
         put("zh", "Chinese (Simplified)");
@@ -61,7 +48,7 @@ public class LlmTranslationClient {
 
     public Map<String, String> generateTranslations(String englishTerm, String definition) {
         if (apiKey == null || apiKey.isBlank()) {
-            log.warn("No Groq API key configured - returning mock translations for demo purposes");
+            log.warn("No Groq API key configured - returning mock translations");
             return mockTranslations(englishTerm);
         }
 
@@ -73,10 +60,10 @@ public class LlmTranslationClient {
             requestBody.put("temperature", 0.2);
             requestBody.put("response_format", Map.of("type", "json_object"));
             requestBody.put("messages", new Object[]{
-                    Map.of("role", "system", "content",
-                            "You are a professional government-document translator. " +
-                            "Respond ONLY with valid JSON mapping language codes to translations. No prose, no markdown."),
-                    Map.of("role", "user", "content", prompt)
+                Map.of("role", "system", "content",
+                    "You are a professional government-document translator. " +
+                    "Respond ONLY with valid JSON mapping language codes to translations. No prose, no markdown."),
+                Map.of("role", "user", "content", prompt)
             });
 
             HttpHeaders headers = new HttpHeaders();
@@ -87,8 +74,8 @@ public class LlmTranslationClient {
             JsonNode response = restTemplate.postForObject(GROQ_API_URL, entity, JsonNode.class);
 
             String content = response
-                    .path("choices").get(0)
-                    .path("message").path("content").asText();
+                .path("choices").get(0)
+                .path("message").path("content").asText();
 
             JsonNode translationsJson = objectMapper.readTree(content);
             Map<String, String> result = new LinkedHashMap<>();
@@ -96,7 +83,7 @@ public class LlmTranslationClient {
             return result;
 
         } catch (Exception ex) {
-            log.error("LLM translation call failed, falling back to mock response: {}", ex.getMessage());
+            log.error("LLM translation call failed, falling back to mock: {}", ex.getMessage());
             return mockTranslations(englishTerm);
         }
     }
@@ -114,14 +101,10 @@ public class LlmTranslationClient {
         return sb.toString();
     }
 
-    /**
-     * Mock fallback so the demo runs without a live API key.
-     * Clearly labeled so it's never mistaken for a real translation.
-     */
     private Map<String, String> mockTranslations(String englishTerm) {
         Map<String, String> mock = new LinkedHashMap<>();
         SUPPORTED_LANGUAGES.forEach((code, name) ->
-                mock.put(code, "[MOCK-" + code.toUpperCase() + "] " + englishTerm));
+            mock.put(code, "[MOCK-" + code.toUpperCase() + "] " + englishTerm));
         return mock;
     }
 
