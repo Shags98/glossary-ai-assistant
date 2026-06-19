@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary AI Assistant</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --paper: #faf9f6;
+    --line: #ddd8cc;
+    --accent: #2d5a4a;
+    --accent-soft: #e8f0ec;
+    --warn: #8a5a2b;
+    --warn-soft: #f5ead9;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    color: #555;
+    font-size: 14px;
+    max-width: 60ch;
+  }
+
+  .panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #666;
+    margin-bottom: 6px;
+  }
+
+  input, textarea {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 15px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    margin-bottom: 16px;
+    background: var(--paper);
+  }
+
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  button {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 14px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  button:hover { background: var(--accent); }
+  button:disabled { background: #999; cursor: not-allowed; }
+
+  .status-line {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #888;
+    margin-top: 12px;
+    min-height: 16px;
+  }
+
+  .warning-box {
+    background: var(--warn-soft);
+    border: 1px solid #e0c79a;
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .warning-box .title {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--warn);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  .match-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-top: 1px solid #e8dcc4;
+  }
+
+  .match-row:first-of-type { border-top: none; }
+
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .term-title {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .badge.mock {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  td {
+    padding: 9px 4px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+
+  td.lang-code {
+    font-family: var(--mono);
+    color: #888;
+    width: 60px;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  td.lang-name {
+    width: 140px;
+    font-weight: 500;
+    color: #444;
+  }
+
+  .history {
+    margin-top: 32px;
+  }
+
+  .history h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: var(--mono);
+    color: #888;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+
+  .history-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0ede5;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: #999;
+    font-family: var(--mono);
+  }
+
+  .empty {
+    color: #999;
+    font-size: 13px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Personal Project &middot; Spring Boot + LLM API</div>
+    <h1>Glossary AI Assistant</h1>
+    <div class="sub">
+      Prototype exploring AI-assisted multilingual term translation for government glossary
+      systems &mdash; the structured batch generation and duplicate detection shown here aren't
+      achievable in Power Apps' native AI Builder / Power Automate connectors.
+    </div>
+  </header>
+
+  <div class="panel">
+    <label for="term">English Term</label>
+    <input id="term" type="text" placeholder="e.g. Disability Insurance Elective Coverage" />
+
+    <label for="definition">Definition / Context (optional, improves translation accuracy)</label>
+    <textarea id="definition" rows="2" placeholder="Brief definition to give the model context..."></textarea>
+
+    <button id="generateBtn" onclick="generateTranslations()">Generate Translations</button>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <div id="resultsContainer"></div>
+
+  <div class="history">
+    <h2>Recent Terms</h2>
+    <div id="historyList"><div class="empty">No terms generated yet.</div></div>
+  </div>
+
+  <footer>
+    glossary-ai-assistant &middot; api/glossary &middot; running on localhost:8080
+  </footer>
+
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8080/api/glossary';
+
+  async function loadHistory() {
+    try {
+      const res = await fetch(`${API_BASE}/terms`);
+      const terms = await res.json();
+      const list = document.getElementById('historyList');
+      if (!terms.length) {
+        list.innerHTML = '<div class="empty">No terms generated yet.</div>';
+        return;
+      }
+      list.innerHTML = terms.map(t => `
+        <div class="history-item">
+          <span>${escapeHtml(t.englishTerm)}</span>
+          <span class="badge ${t.status === 'AI_SUGGESTED' ? '' : ''}">${t.status.replace('_', ' ')}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.warn('Could not load history - is the backend running?', e);
+    }
+  }
+
+  async function generateTranslations() {
+    const term = document.getElementById('term').value.trim();
+    const definition = document.getElementById('definition').value.trim();
+    const statusLine = document.getElementById('statusLine');
+    const btn = document.getElementById('generateBtn');
+
+    if (!term) {
+      statusLine.textContent = 'Enter an English term first.';
+      return;
+    }
+
+    btn.disabled = true;
+    statusLine.textContent = 'Checking for similar terms and generating translations...';
+
+    try {
+      const res = await fetch(`${API_BASE}/terms/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ englishTerm: term, definition })
+      });
+
+      if (!res.ok) throw new Error('Request failed: ' + res.status);
+
+      const data = await res.json();
+      renderResults(data.term, data.similarTermWarnings);
+      statusLine.textContent = 'Done.';
+      loadHistory();
+    } catch (e) {
+      statusLine.textContent = 'Error: ' + e.message + ' (is the Spring Boot backend running on :8080?)';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  const LANGUAGE_NAMES = {
+    es: 'Spanish', zh: 'Chinese (Simplified)', vi: 'Vietnamese', tl: 'Tagalog',
+    ko: 'Korean', ar: 'Arabic', hy: 'Armenian', fa: 'Farsi/Persian',
+    hmn: 'Hmong', ja: 'Japanese', pa: 'Punjabi', ru: 'Russian', th: 'Thai', uk: 'Ukrainian'
+  };
+
+  function renderResults(term, similarWarnings) {
+    const container = document.getElementById('resultsContainer');
+    const isMock = Object.values(term.translations)[0]?.startsWith('[MOCK-');
+
+    let warningsHtml = '';
+    if (similarWarnings && similarWarnings.length) {
+      warningsHtml = `
+        <div class="warning-box">
+          <div class="title">⚠ Possible duplicate terms detected</div>
+          ${similarWarnings.map(w => `
+            <div class="match-row">
+              <span>${escapeHtml(w.existingTerm)}</span>
+              <span>${(w.similarityScore * 100).toFixed(0)}% similar &mdash; ${escapeHtml(w.reason)}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    const rows = Object.entries(term.translations).map(([code, text]) => `
+      <tr>
+        <td class="lang-code">${code}</td>
+        <td class="lang-name">${LANGUAGE_NAMES[code] || code}</td>
+        <td>${escapeHtml(text)}</td>
+      </tr>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="panel">
+        ${warningsHtml}
+        <div class="results-header">
+          <div class="term-title">${escapeHtml(term.englishTerm)}</div>
+          <span class="badge ${isMock ? 'mock' : ''}">${isMock ? 'mock mode' : term.status.replace('_', ' ')}</span>
+        </div>
+        <table>${rows}</table>
+      </div>
+    `;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>

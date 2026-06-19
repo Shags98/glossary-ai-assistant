@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  glossary-ai-db:
+    image: postgres:16-alpine
+    container_name: glossary-ai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: glossary_ai_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - glossary_ai_data:/var/lib/postgresql/data
+
+volumes:
+  glossary_ai_data:
